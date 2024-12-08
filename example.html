@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Favorites & Sales Performance</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Menu Favorites & Sales Performance Dashboard</h1>
+
+    <!-- Input tanggal -->
+    <div>
+        <label for="start_date">Start Date:</label>
+        <input type="date" id="start_date">
+        <label for="end_date">End Date:</label>
+        <input type="date" id="end_date">
+        <button onclick="loadMenuFavorites()">Get Menu Favorites</button>
+        <button onclick="loadSalesPerformance()">Get Sales Performance</button>
+    </div>
+
+    <!-- Chart untuk Menu Favorites -->
+    <div style="width: 80%; margin: auto; margin-top: 40px;">
+        <h2>Menu Favorites</h2>
+        <canvas id="favoritesChart"></canvas>
+    </div>
+
+    <!-- Chart untuk Sales Performance -->
+    <div style="width: 80%; margin: auto; margin-top: 40px;">
+        <h2>Sales Performance</h2>
+        <canvas id="salesPerformanceChart"></canvas>
+    </div>
+
+    <script>
+        let favoritesChartInstance = null;
+        let salesChartInstance = null;
+
+        // Fungsi untuk memuat data Menu Favorites
+        async function loadMenuFavorites() {
+            const start_date = document.getElementById('start_date').value;
+            const end_date = document.getElementById('end_date').value;
+
+            if (!start_date || !end_date) {
+                alert("Please select both start and end dates.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/menu_favorites/?start_date=${start_date}&end_date=${end_date}`);
+
+                if (!response.ok) {
+                    alert("Failed to fetch menu favorites data. Please check your server.");
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.code !== 200 || !data.data || data.data.length === 0) {
+                    alert("No data available for menu favorites in the selected date range.");
+                    return;
+                }
+
+                const labels = data.data.map(item => item.menu_name);
+                const values = data.data.map(item => item.qty);
+
+                updateChart('favoritesChart', labels, values, 'bar', 'Total Sales', favoritesChartInstance, chart => {
+                    favoritesChartInstance = chart;
+                });
+            } catch (error) {
+                console.error("Error fetching menu favorites data:", error);
+                alert("An error occurred while fetching menu favorites data. Please try again.");
+            }
+        }
+
+        // Fungsi untuk memuat data Sales Performance
+        async function loadSalesPerformance() {
+            const start_date = document.getElementById('start_date').value;
+            const end_date = document.getElementById('end_date').value;
+
+            if (!start_date || !end_date) {
+                alert("Please select both start and end dates.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/sales_performance/?start_date=${start_date}&end_date=${end_date}`);
+
+                if (!response.ok) {
+                    alert("Failed to fetch sales performance data. Please check your server.");
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.code !== 200 || !data.data || data.data.length === 0) {
+                    alert("No data available for sales performance in the selected date range.");
+                    return;
+                }
+
+                const labels = data.data.map(item => item.sales_date);
+                const values = data.data.map(item => item.total_items_sold);
+
+                updateChart('salesPerformanceChart', labels, values, 'line', 'Total Items Sold', salesChartInstance, chart => {
+                    salesChartInstance = chart;
+                });
+            } catch (error) {
+                console.error("Error fetching sales performance data:", error);
+                alert("An error occurred while fetching sales performance data. Please try again.");
+            }
+        }
+
+        // Fungsi generik untuk memperbarui chart
+        function updateChart(canvasId, labels, values, chartType, label, currentChartInstance, setChartInstance) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+
+            // Hapus chart yang ada jika sudah ada
+            if (currentChartInstance) {
+                currentChartInstance.destroy();
+            }
+
+            // Buat chart baru
+            const newChart = new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: values,
+                        backgroundColor: chartType === 'bar' ? 'rgba(75, 192, 192, 0.2)' : 'rgba(54, 162, 235, 0.2)',
+                        borderColor: chartType === 'bar' ? 'rgba(75, 192, 192, 1)' : 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        fill: chartType === 'line' // Hanya line chart yang memiliki fill
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: label
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: chartType === 'line' ? 'Date' : 'Menu Name'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Value'
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Set instance chart baru
+            setChartInstance(newChart);
+        }
+    </script>
+</body>
+</html>
