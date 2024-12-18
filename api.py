@@ -24,11 +24,11 @@ app.add_middleware(
 )
 
 # Parameter koneksi database
-DB_HOST = "127.0.0.1"
-DB_USER = "root"
-DB_PASSWORD = "Shadow1794"
-DB_NAME = "rasakopi"
-DB_PORT = 3307
+DB_HOST = "rasa-kopi-faizelfahad2-d626.f.aivencloud.com"
+DB_USER = "avnadmin"
+DB_PASSWORD = "AVNS_KKrXSYzmxWVD7I41FkQ"
+DB_NAME = "rasa-kopi"
+DB_PORT = 14355
 
 try:
     engine = create_engine(f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
