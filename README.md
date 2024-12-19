@@ -10,4 +10,5 @@ Endpoint yang tersedia: menu_favorites, sales_performance
 <br>
 Contoh request bisa di lihat file test_api.py
 
+## Example Dashboard
 ![Example](https://raw.githubusercontent.com/nevmock/Raskop-Analytics/refs/heads/main/Screenshot%202024-12-08%20205333.png)
