@@ -129,9 +129,9 @@ async def validation_exception_handler(request, exc):
                     "status": "SUCCESS",
                     "recordsTotal": 3,
                     "data": [
-                        {"menu_name": "Latte", "qty": 50, "image_uri" : "https://picsum.photos/892/848"},
-                        {"menu_name": "Espresso", "qty": 30, "image_uri" : "https://picsum.photos/892/238"},
-                        {"menu_name": "Cappuccino", "qty": 20, "image_uri" : "https://picsum.photos/132/248"}
+                        {{'menu_name': 'Teh', 'image_uri': 'https://dummyimage.com/220x341', 'category': 'minuman', 'qty': 31},
+                        {'menu_name': 'Air', 'image_uri': 'https://placekitten.com/121/729', 'category': 'minuman', 'qty': 23},
+                        {'menu_name': 'Cemilan', 'image_uri': 'https://dummyimage.com/980x76', 'category': 'makanan', 'qty': 20}
                     ],
                     "error": None
                 }
