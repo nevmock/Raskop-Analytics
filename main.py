@@ -75,7 +75,7 @@ def get_menu_favorites(data, start_date, end_date):
     ]
     # Agregasi data
     aggregated_data = (
-        filtered_data.groupby(["menu_name", "image_uri"])["qty"]
+        filtered_data.groupby(["menu_name", "image_uri", "category"])["qty"]
         .sum()
         .reset_index()
         .sort_values(by="qty", ascending=False)
