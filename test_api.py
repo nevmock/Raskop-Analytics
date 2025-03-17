@@ -2,8 +2,8 @@ import requests
 
 # Tentukan start_date dan end_date
 params = {
-    "start_date": "2024-01-01",  # Ganti dengan tanggal awal
-    "end_date": "2024-01-31"     # Ganti dengan tanggal akhir
+    "start_date": "2025-03-01",  # Ganti dengan tanggal awal
+    "end_date": "2025-03-20"     # Ganti dengan tanggal akhir
 }
 
 # Kirim permintaan GET dengan parameter query

@@ -33,30 +33,6 @@ DB_PORT = os.environ.get("DB_PORT")
 
 try:
     engine = create_engine(f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
-    # Daftar tabel yang ingin dibaca
-    tables = ["menu", "order_detail", "reservasi", "`order`"]  # Ganti dengan nama tabel di database
-
-    # Membaca tabel ke dalam DataFrame
-    dataframes = {}
-    for table in tables:
-        query = f"SELECT * FROM {table}"
-        dataframes[table] = pd.read_sql(query, con=engine)
-
-    # Load data
-    menu = dataframes["menu"]
-    order_detail = dataframes["order_detail"]
-    reservasi = dataframes["reservasi"]
-    order = dataframes["`order`"]
-
-    # Transformasi data untuk analisis
-    filter_menu = menu[['id', 'name', 'category', 'image_uri']].rename(columns={'id': 'menu_id', 'name': 'menu_name'})
-    filter_order = order[['id', 'reservasi_id', 'order_by']].rename(columns={'id': 'order_id'})
-    filter_reservasi = reservasi[['id', 'start']].rename(columns={'start': 'date', 'id': 'reservasi_id'})
-
-    menu_fav_by_date = pd.merge(order_detail, filter_menu, how='left', on='menu_id')
-    menu_fav_by_date = pd.merge(menu_fav_by_date, filter_order, how='left', on='order_id')
-    menu_fav_by_date = pd.merge(menu_fav_by_date, filter_reservasi, how='left', on='reservasi_id')
-    menu_fav_by_date['date'] = pd.to_datetime(menu_fav_by_date['date'], format='%Y-%m-%d %H:%M:%S')
 
 except OperationalError as e:
     db_connected = False
@@ -67,42 +43,40 @@ class DateRange(BaseModel):
     start_date: datetime
     end_date: datetime
 # Fungsi untuk mendapatkan menu favorit
-def get_menu_favorites(data, start_date, end_date):
-    # Filter data berdasarkan rentang tanggal
-    filtered_data = data[
-        (data["date"] >= pd.to_datetime(start_date)) & 
-        (data["date"] <= pd.to_datetime(end_date))
-    ]
-    # Agregasi data
-    aggregated_data = (
-        filtered_data.groupby(["menu_name", "image_uri"])["qty"]
-        .sum()
-        .reset_index()
-        .sort_values(by="qty", ascending=False)
-    )
-    return aggregated_data
+def get_menu_favorites(start_date, end_date):
+    query = f"""
+        SELECT od.menu_id, m.name AS menu_name, m.image_uri, SUM(od.qty) AS qty
+        FROM order_detail od
+        JOIN menu m ON od.menu_id = m.id
+        JOIN `order` o ON od.order_id = o.id
+        JOIN reservasi r ON o.reservasi_id = r.id
+        WHERE r.start BETWEEN '{start_date}' AND '{end_date}'
+        GROUP BY od.menu_id, m.name, m.image_uri
+        ORDER BY qty DESC;
+    """
+    df = pd.read_sql(query, con=engine)
+    return df
+
 
 
 
 # Fungsi untuk mendapatkan performasi penjualan
-def get_sales_performance(data, start_date, end_date):
-    # Filter data berdasarkan rentang tanggal
-    filtered_data = data[
-        (data["date"] >= pd.to_datetime(start_date)) & 
-        (data["date"] <= pd.to_datetime(end_date))
-    ]
-    # Agregasi data
-    aggregated_data = (
-        filtered_data.groupby(filtered_data["date"].dt.date)
-        .agg(
-            total_sales=("price", "sum"),  # Total pendapatan
-            total_orders=("order_id", "nunique"),  # Total jumlah pesanan unik
-            total_items_sold=("qty", "sum")  # Total jumlah item terjual
-        )
-        .reset_index()
-        .rename(columns={"date": "sales_date"})
-    )
-    return aggregated_data
+def get_sales_performance(start_date, end_date):
+    query = f"""
+        SELECT DATE(r.start) AS sales_date,
+               SUM(od.price * od.qty) AS total_sales,
+               COUNT(DISTINCT o.id) AS total_orders,
+               SUM(od.qty) AS total_items_sold
+        FROM order_detail od
+        JOIN `order` o ON od.order_id = o.id
+        JOIN reservasi r ON o.reservasi_id = r.id
+        WHERE r.start BETWEEN '{start_date}' AND '{end_date}'
+        GROUP BY sales_date
+        ORDER BY sales_date;
+    """
+    df = pd.read_sql(query, con=engine)
+    return df
+
 
 # Custom exception handler untuk validasi input
 @app.exception_handler(RequestValidationError)
@@ -182,7 +156,7 @@ def menu_favorites(params: DateRange = Depends()):
     try:
         start_date = params.start_date
         end_date = params.end_date
-        result = get_menu_favorites(menu_fav_by_date, start_date, end_date)
+        result = get_menu_favorites(start_date, end_date)
         return {
             "code": 200,
             "status": "SUCCESS",
@@ -283,7 +257,7 @@ def sales_performance(params: DateRange = Depends()):
     try:
         start_date = params.start_date
         end_date = params.end_date
-        result = get_sales_performance(menu_fav_by_date, start_date, end_date)
+        result = get_sales_performance(start_date, end_date)
         return {
             "code": 200,
             "status": "SUCCESS",
