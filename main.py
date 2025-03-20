@@ -45,7 +45,7 @@ class DateRange(BaseModel):
 # Fungsi untuk mendapatkan menu favorit
 def get_menu_favorites(start_date, end_date):
     query = f"""
-        SELECT od.menu_id, m.name AS menu_name, m.image_uri, SUM(od.qty) AS qty
+        SELECT m.name AS menu_name, m.image_uri, SUM(od.qty) AS qty
         FROM order_detail od
         JOIN menu m ON od.menu_id = m.id
         JOIN `order` o ON od.order_id = o.id

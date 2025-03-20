@@ -7,8 +7,8 @@ params = {
 }
 
 # Kirim permintaan GET dengan parameter query
-# response = requests.get("http://okay-hippopotamus-telkomuniversity231-317e9616.koyeb.app/menu_favorites", params=params)
-response = requests.get("http://okay-hippopotamus-telkomuniversity231-317e9616.koyeb.app/sales_performance", params=params)
+response = requests.get("http://okay-hippopotamus-telkomuniversity231-317e9616.koyeb.app/menu_favorites", params=params)
+# response = requests.get("http://okay-hippopotamus-telkomuniversity231-317e9616.koyeb.app/sales_performance", params=params)
 
 # Cetak hasil JSON
 print(response.json())
