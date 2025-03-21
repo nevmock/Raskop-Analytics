@@ -50,7 +50,7 @@ def get_menu_favorites(start_date, end_date):
         JOIN menu m ON od.menu_id = m.id
         JOIN `order` o ON od.order_id = o.id
         JOIN reservasi r ON o.reservasi_id = r.id
-        WHERE r.start BETWEEN '{start_date}' AND '{end_date}'
+        WHERE DATE(r.start) BETWEEN '{start_date.date()}' AND '{end_date.date()}'
         GROUP BY od.menu_id, m.name, m.image_uri
         ORDER BY qty DESC;
     """
@@ -70,7 +70,7 @@ def get_sales_performance(start_date, end_date):
         FROM order_detail od
         JOIN `order` o ON od.order_id = o.id
         JOIN reservasi r ON o.reservasi_id = r.id
-        WHERE r.start BETWEEN '{start_date}' AND '{end_date}'
+        WHERE DATE(r.start) BETWEEN '{start_date.date()}' AND '{end_date.date()}'
         GROUP BY sales_date
         ORDER BY sales_date;
     """
